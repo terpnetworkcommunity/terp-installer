@@ -12,7 +12,7 @@ from enum import Enum, auto
 os.remove(sys.argv[0])
 
 class NetworkVersion(str, Enum):
-    MAINNET = "TBD"
+    MAINNET = "TBD" # TO-DO: add mainnet versions
     TESTNET = "v0.2.0"
     LOCALTERP = "v0.2.0"
 
@@ -109,7 +109,7 @@ both.add_argument(
     help='R|Node type \nDefault: "full" '+str(nodeTypeChoices)+'\n ',
     dest="nodeType")
 
-networkChoices = ['TBD', 'athena-3']
+networkChoices = ['TBD', 'athena-3'] ## TO-DO: add mainnet resources
 both.add_argument(
     '-n',
     '--network',
@@ -129,14 +129,14 @@ both.add_argument(
     help='R|Pruning settings \nDefault: "everything" '+str(pruningChoices)+'\n ',
     dest="pruning")
 
-cosmovisorServiceChoices = ['cosmoservice', 'osmoservice', 'noservice']
+cosmovisorServiceChoices = ['cosmoservice', 'terpservice', 'noservice']
 both.add_argument(
     '-cvs',
     '--cosmovisor-service',
     type = str,
     choices=cosmovisorServiceChoices,
-    default='osmoservice',
-    help='R|Start with cosmovisor systemctl service, terpd systemctl service, or exit without creating or starting a service \nDefault: "osmoservice" '+str(cosmovisorServiceChoices),
+    default='terpservice',
+    help='R|Start with cosmovisor systemctl service, terpd systemctl service, or exit without creating or starting a service \nDefault: "terpservice" '+str(cosmovisorServiceChoices),
     dest="cosmovisorService")
 
 # testnet only commands ("testnet" group)
@@ -210,7 +210,7 @@ mainnet.add_argument(
     '--extra-swap',
     type = bool,
     default=True,
-    help='R|Use extra swap if less than 64Gb RAM are detected when syncing from genesis\nDefault (bool): True\n ',
+    help='R|Use extra swap if less than 16Gb RAM are detected when syncing from genesis\nDefault (bool): True\n ',
     dest="extraSwap")
 
 mainnet.add_argument(
@@ -532,8 +532,8 @@ def extraSwap():
     mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
     mem_gib = mem_bytes/(1024.**3)
     print(bcolors.OKGREEN +"RAM Detected: "+str(round(mem_gib))+"GB"+ bcolors.ENDC)
-    swapNeeded = 64 - round(mem_gib)
-    if round(mem_gib) < 64:
+    swapNeeded = 16 - round(mem_gib)
+    if round(mem_gib) < 16:
         print(bcolors.OKGREEN +"""
 There have been reports of replay from genesis needing extra swap (up to 16GB) to prevent OOM errors.
 Would you like to overwrite any previous swap file and instead set a """+str(swapNeeded)+"""GB swap file?
@@ -671,26 +671,26 @@ def mainNetLocation ():
 2) Singapore
 3) SanFrancisco (WARNING: Location usually slow)
     """+ bcolors.ENDC)
-    if args.snapshotLocation == "netherlands":
-        nodeLocationAns = "1"
-    elif args.snapshotLocation == "singapore":
+    if args.snapshotLocation == "netherlands": ## TO-DO: change snapshot location
+        nodeLocationAns = "1"  
+    elif args.snapshotLocation == "singapore": ## TO-DO: change snapshot location
         nodeLocationAns = "2"
-    elif args.snapshotLocation == "sanfrancisco":
+    elif args.snapshotLocation == "sanfrancisco": ## TO-DO: change snapshot location
         nodeLocationAns = "3"
     else:
         nodeLocationAns = input(bcolors.OKGREEN + 'Enter Choice: '+ bcolors.ENDC)
 
     if nodeLocationAns == "1":
-        subprocess.run(["clear"], shell=True)
+        subprocess.run(["clear"], shell=True) ## TO-DO: change snapshot location
         location = "Netherlands"
         snapshotInstall()
     elif nodeLocationAns == "2":
         subprocess.run(["clear"], shell=True)
-        location = "Singapore"
+        location = "Singapore" ## TO-DO: change snapshot location
         snapshotInstall()
     elif nodeLocationAns == "3":
         subprocess.run(["clear"], shell=True)
-        location = "SanFrancisco"
+        location = "SanFrancisco" ## TO-DO: change snapshot location
         snapshotInstall()
     else:
         subprocess.run(["clear"], shell=True)
@@ -713,12 +713,12 @@ def testNetType ():
 
     if nodeTypeAns == "1":
         subprocess.run(["clear"], shell=True)
-        fileName = "osmotestnet-4-pruned"
+        fileName = "osmotestnet-4-pruned" ## TO-DO: change snapshot location
         location = "Netherlands"
         snapshotInstall()
     elif nodeTypeAns == "2":
         subprocess.run(["clear"], shell=True)
-        fileName = "osmotestnet-4-archive"
+        fileName = "osmotestnet-4-archive" ## TO-DO: change snapshot location
         location = "Netherlands"
         snapshotInstall()
     else:
@@ -747,16 +747,16 @@ def mainNetType ():
 
     if nodeTypeAns == "1":
         subprocess.run(["clear"], shell=True)
-        fileName = "TBD-pruned"
+        fileName = "TBD-pruned" ## TO-DO: change snapshot location
         mainNetLocation()
     elif nodeTypeAns == "2":
         subprocess.run(["clear"], shell=True)
-        fileName = "TBD-default"
+        fileName = "TBD-default" ## TO-DO: change snapshot location
         mainNetLocation()
     elif nodeTypeAns == "3":
         subprocess.run(["clear"], shell=True)
         fileName = "TBD-archive"
-        location = "Netherlands"
+        location = "Netherlands" ## TO-DO: change snapshot location
         snapshotInstall()
     else:
         subprocess.run(["clear"], shell=True)
@@ -937,7 +937,7 @@ def setupLocalnet ():
     subprocess.run(["clear"], shell=True)
     LOCALTERPComplete()
 
-def setupMainnet ():
+def setupMainnet (): ## TO-DO: add main-net genesis, addrbook
     print(bcolors.OKGREEN + "Initializing Terp-Core Node " + nodeName + bcolors.ENDC)
     #subprocess.run(["terpd unsafe-reset-all"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
     subprocess.run(["rm "+terp_home+"/config/app.toml"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
@@ -974,7 +974,7 @@ def setupTestnet ():
 
 
 def clientSettings ():
-    if networkType == NetworkType.MAINNET:
+    if networkType == NetworkType.MAINNET: # TO-DO: add mainnet resources
         print(bcolors.OKGREEN + "Initializing Terp-Core Client Node " + nodeName + bcolors.ENDC)
         #subprocess.run(["terpd unsafe-reset-all"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
         subprocess.run(["rm "+terp_home+"/config/client.toml"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
@@ -1408,11 +1408,11 @@ def selectNetwork ():
     print(bcolors.OKGREEN +
     """
 Please choose a network to join:
-1) Mainnet (TBD)
+1) Mainnet (TBD) # TO-DO: add mainnet versions
 2) Testnet (athena-3)
     """ + bcolors.ENDC)
 
-    if args.network == "TBD":
+    if args.network == "TBD": # TO-DO: add mainnet versions
         networkType = NetworkType.MAINNET
     elif args.network == "athena-3":
         networkType = NetworkType.TESTNET
