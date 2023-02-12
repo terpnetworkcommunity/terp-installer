@@ -12,7 +12,7 @@ from enum import Enum, auto
 os.remove(sys.argv[0])
 
 class NetworkVersion(str, Enum):
-    TESTNET = "v0.2.0"
+    TESTNET = "v0.4.0"
     LOCALTERP = "v0.2.0"
 
 repo = "https://github.com/terpnetwork/terp-core"
@@ -106,8 +106,8 @@ both.add_argument(
     '--network',
     type = str,
     choices=networkChoices,
-    default='TBD',
-    help='R|Network to join \nDefault: "TBD" '+str(networkChoices)+'\n ',
+    default='athena-3',
+    help='R|Network to join \nDefault: "athena-3" '+str(networkChoices)+'\n ',
     dest="network")
 
 pruningChoices = ['default', 'nothing', 'everything']
@@ -409,7 +409,6 @@ def replayFromGenesisLevelDb ():
 
 
 
-
 def replayFromGenesisDb ():
     print(bcolors.OKGREEN + """Please choose which database you want to use:
 1) goleveldb (Default)
@@ -437,8 +436,8 @@ def extraSwap():
     mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
     mem_gib = mem_bytes/(1024.**3)
     print(bcolors.OKGREEN +"RAM Detected: "+str(round(mem_gib))+"GB"+ bcolors.ENDC)
-    swapNeeded = 16 - round(mem_gib)
-    if round(mem_gib) < 16:
+    swapNeeded = 8 - round(mem_gib)
+    if round(mem_gib) < 8:
         print(bcolors.OKGREEN +"""
 There have been reports of replay from genesis needing extra swap (up to 16GB) to prevent OOM errors.
 Would you like to overwrite any previous swap file and instead set a """+str(swapNeeded)+"""GB swap file?
@@ -471,7 +470,7 @@ Would you like to overwrite any previous swap file and instead set a """+str(swa
             subprocess.run(["clear"], shell=True)
             extraSwap()
     else:
-        print(bcolors.OKGREEN +"You have enough RAM to meet the 16GB minimum requirement, moving on to system setup..."+ bcolors.ENDC)
+        print(bcolors.OKGREEN +"You have enough RAM to meet the 8GB minimum requirement, moving on to system setup..."+ bcolors.ENDC)
         time.sleep(3)
         subprocess.run(["clear"], shell=True)
         replayFromGenesisDb()
@@ -572,25 +571,25 @@ def testNetType ():
     global fileName
     global location
     print(bcolors.OKGREEN + """Please choose the node snapshot type:
-1) Pruned (recommended)
-2) Archive
+1) Highstake
+1) Nodejumper
     """+ bcolors.ENDC)
-    if args.snapshotTypeTestnet == "pruned":
+    if args.snapshotTypeTestnet == "HighStake":
         nodeTypeAns = "1"
-    elif args.snapshotTypeTestnet == "archive":
+    elif args.snapshotTypeTestnet == "Nodejumper":
         nodeTypeAns = "2"
     else:
         nodeTypeAns = input(bcolors.OKGREEN + 'Enter Choice: '+ bcolors.ENDC)
 
     if nodeTypeAns == "1":
         subprocess.run(["clear"], shell=True)
-        fileName = "osmotestnet-4-pruned" ## TO-DO: change snapshot location
-        location = "Netherlands"
+        fileName = "TBD" ## TO-DO: change snapshot location
+        location = "TBD"
         snapshotInstall()
     elif nodeTypeAns == "2":
         subprocess.run(["clear"], shell=True)
-        fileName = "osmotestnet-4-archive" ## TO-DO: change snapshot location
-        location = "Netherlands"
+        fileName = "TBD" ## TO-DO: change snapshot location
+        location = "TBD"
         snapshotInstall()
     else:
         subprocess.run(["clear"], shell=True)
@@ -600,29 +599,35 @@ def testNetType ():
 
 def dataSyncSelection ():
     print(bcolors.OKGREEN + """Please choose from the following options:
-1) Download a snapshot from ChainLayer (recommended)
-2) Start at block 1 and automatically upgrade at upgrade heights (replay from genesis, can also select rocksdb here)
-3) Exit now, I only wanted to install the daemon
+1) Download a snapshot from NodeJumper 
+2) Download a snapshot from HighStakes
+3) Start at block 1 and automatically upgrade at upgrade heights (replay from genesis)
+4) Exit now, I only wanted to install the daemon
     """+ bcolors.ENDC)
     if args.dataSync == "snapshot":
         dataTypeAns = "1"
+    elif args.dataSync == "snapshot":
+        dataTypeAns = "2"    
     elif args.dataSync == "genesis":
-        dataTypeAns = "2"
-    elif args.dataSync == "exit":
         dataTypeAns = "3"
+    elif args.dataSync == "exit":
+        dataTypeAns = "4"
     else:
         dataTypeAns = input(bcolors.OKGREEN + 'Enter Choice: '+ bcolors.ENDC)
 
     if dataTypeAns == "1":
         subprocess.run(["clear"], shell=True)
         mainNetType()
-    elif dataTypeAns == "2":
+    if dataTypeAns == "2":
+        subprocess.run(["clear"], shell=True)
+        mainNetType()
+    elif dataTypeAns == "3":
         subprocess.run(["clear"], shell=True)
         extraSwap()
     #elif dataTypeAns == "2":
         #subprocess.run(["clear"], shell=True)
         #stateSyncInit ()
-    elif dataTypeAns == "3":
+    elif dataTypeAns == "4":
         subprocess.run(["clear"], shell=True)
         partComplete()
     else:
@@ -782,12 +787,10 @@ def setupTestnet ():
     subprocess.run(["rm "+terp_home+"/config/addrbook.json"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
     subprocess.run(["terpd init " + nodeName + " --chain-id=athena-3 -o --home "+terp_home], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
     print(bcolors.OKGREEN + "Downloading and Replacing Genesis..." + bcolors.ENDC)
-    subprocess.run(["wget -O "+terp_home+"/config/genesis.tar.bz2 wget https://github.com/terpnetowrk/test-net/raw/main/athena-3/genesis.tar.bz2"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
+    subprocess.run(["curl https://raw.githubusercontent.com/terpnetwork/test-net/master/athena-4/stock-genesis.json >> "+terp_home+"/config/genesis.json"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
     print(bcolors.OKGREEN + "Finding and Replacing Seeds..." + bcolors.ENDC)
-    peers = ""
+    peers = "15f5bc75be9746fd1f712ca046502cae8a0f6ce7@terpnetwork-testnet.nodejumper.io:30656,b0167b898f42b763760cb43c3278a9997bf5a904@116.202.227.117:33656,f9d7b883594e651a45e91c49712151bf93322c08@141.95.65.26:29456,19566196191ca68c3688c14a73e47125bdebe352@62.171.171.91:26656"
     subprocess.run(["sed -i -E 's/persistent_peers = \"\"/persistent_peers = \""+peers+"\"/g' "+terp_home+"/config/config.toml"], shell=True)
-    subprocess.run(["tar -xjf "+terp_home+"/config/genesis.tar.bz2"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True)
-    subprocess.run(["rm "+terp_home+"/config/genesis.tar.bz2"], shell=True)
     subprocess.run(["sed -i -E 's/seeds = \"\"/seeds = \"\"/g' "+terp_home+"/config/config.toml"], shell=True)
     print(bcolors.OKGREEN + "Downloading and Replacing Addressbook..." + bcolors.ENDC)
     subprocess.run(["wget -O "+terp_home+"/config/addrbook.json https://snapshots2-testnet.nodejumper.io/terpnetwork-testnet/addrbook.json"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
@@ -820,7 +823,7 @@ def clientSettings ():
 
 def initNodeName ():
     global nodeName
-    print(bcolors.OKGREEN + "AFTER INPUTTING NODE NAME, ALL PREVIOUS OSMOSIS DATA WILL BE RESET" + bcolors.ENDC)
+    print(bcolors.OKGREEN + "AFTER INPUTTING NODE NAME, ALL PREVIOUS TERP DATA WILL BE RESET" + bcolors.ENDC)
 
     if args.nodeName:
         nodeName = args.nodeName
@@ -1129,7 +1132,7 @@ def initEnvironment():
         mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
         mem_gib = mem_bytes/(1024.**3)
         print(bcolors.OKGREEN +"RAM Detected: "+str(round(mem_gib))+"GB"+ bcolors.ENDC)
-        if round(mem_gib) < 32:
+        if round(mem_gib) < 8 :
             print(bcolors.OKGREEN +"""
 You have less than the recommended 8GB of RAM. Would you like to set up a swap file?
 1) Yes, set up swap file
@@ -1143,7 +1146,7 @@ You have less than the recommended 8GB of RAM. Would you like to set up a swap f
                 swapAns = input(bcolors.OKGREEN + 'Enter Choice: '+ bcolors.ENDC)
 
             if swapAns == "1":
-                swapNeeded = 32 - round(mem_gib)
+                swapNeeded = 8 - round(mem_gib)
                 print(bcolors.OKGREEN +"Setting up "+ str(swapNeeded)+ "GB swap file..."+ bcolors.ENDC)
                 subprocess.run(["sudo swapoff -a"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True)
                 subprocess.run(["sudo fallocate -l " +str(swapNeeded)+"G /swapfile"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True)
