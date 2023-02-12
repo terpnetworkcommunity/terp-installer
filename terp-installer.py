@@ -13,7 +13,7 @@ os.remove(sys.argv[0])
 
 class NetworkVersion(str, Enum):
     TESTNET = "v0.4.0"
-    LOCALTERP = "v0.2.0"
+    LOCALTERP = "v0.4.0"
 
 repo = "https://github.com/terpnetwork/terp-core"
 version = NetworkVersion.TESTNET
@@ -399,10 +399,10 @@ def replayFromGenesisLevelDb ():
     subprocess.run(["mkdir -p "+terp_home+"/cosmovisor/genesis"], shell=True, env=my_env)
     subprocess.run(["mkdir -p "+terp_home+"/cosmovisor/genesis/bin"], shell=True, env=my_env)
     subprocess.run(["mkdir -p "+terp_home+"/cosmovisor/upgrades"], shell=True, env=my_env)
-    subprocess.run(["mkdir -p "+terp_home+"/cosmovisor/upgrades/v0.2.0/bin"], shell=True, env=my_env)
+    subprocess.run(["mkdir -p "+terp_home+"/cosmovisor/upgrades/v0.4.0/bin"], shell=True, env=my_env)
     os.chdir(os.path.expanduser(HOME+"/terp-core"))
-    print(bcolors.OKGREEN + "Preparing v0.2.0 Upgrade..." + bcolors.ENDC)
-    subprocess.run(["git checkout v0.2.0"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
+    print(bcolors.OKGREEN + "Preparing v0.4.0 Upgrade..." + bcolors.ENDC)
+    subprocess.run(["git checkout v0.4.0"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
     subprocess.run(["make build"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
     subprocess.run(["clear"], shell=True)
     startReplayNow()
@@ -817,7 +817,7 @@ def clientSettings ():
         print(bcolors.OKGREEN + "Changing Client Settings..." + bcolors.ENDC)
         subprocess.run(["sed -i -E 's/chain-id = \"\"/chain-id = \"LOCALTERP\"/g' "+terp_home+"/config/client.toml"], shell=True)
         subprocess.run(["sed -i -E 's|node = \"tcp://localhost:26657\"|node = \"tcp://127.0.0.1:26657\"|g' "+terp_home+"/config/client.toml"], shell=True)
-        subprocess.run(["clear"], shell=True)erpd
+        subprocess.run(["clear"], shell=True)
         setupLocalnet()
 
 
@@ -1220,7 +1220,7 @@ Please choose a network to join:
 2) Testnet (athena-3)
     """ + bcolors.ENDC)
 
-   if args.network == "athena-3":
+    if args.network == "athena-3":
         networkType = NetworkType.TESTNET
     else:
         networkType = input(bcolors.OKGREEN + 'Enter Choice: '+ bcolors.ENDC)
