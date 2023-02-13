@@ -678,27 +678,13 @@ def pruningSettings ():
     else:
         pruneAns = input(bcolors.OKGREEN + 'Enter Choice: '+ bcolors.ENDC)
 
-    if pruneAns == "1" and networkType == NetworkType.MAINNET:
-        subprocess.run(["clear"], shell=True)
-        dataSyncSelection()
-    elif pruneAns == "1" and networkType == NetworkType.TESTNET:
+    if pruneAns == "1" and networkType == NetworkType.TESTNET:
         subprocess.run(["clear"], shell=True)
         dataSyncSelectionTest()
-    elif pruneAns == "2" and networkType == NetworkType.MAINNET:
-        subprocess.run(["clear"], shell=True)
-        subprocess.run(["sed -i -E 's/pruning = \"default\"/pruning = \"nothing\"/g' "+terp_home+"/config/app.toml"], shell=True)
-        dataSyncSelection()
     elif pruneAns == "2" and networkType == NetworkType.TESTNET:
         subprocess.run(["clear"], shell=True)
         subprocess.run(["sed -i -E 's/pruning = \"default\"/pruning = \"nothing\"/g' "+terp_home+"/config/app.toml"], shell=True)
         dataSyncSelectionTest()
-    elif pruneAns == "3" and networkType == NetworkType.MAINNET:
-        primeNum = random.choice([x for x in range(11, 97) if not [t for t in range(2, x) if not x % t]])
-        subprocess.run(["clear"], shell=True)
-        subprocess.run(["sed -i -E 's/pruning = \"default\"/pruning = \"custom\"/g' "+terp_home+"/config/app.toml"], shell=True)
-        subprocess.run(["sed -i -E 's/pruning-keep-recent = \"0\"/pruning-keep-recent = \"10000\"/g' "+terp_home+"/config/app.toml"], shell=True)
-        subprocess.run(["sed -i -E 's/pruning-interval = \"0\"/pruning-interval = \""+str(primeNum)+"\"/g' "+terp_home+"/config/app.toml"], shell=True)
-        dataSyncSelection()
     elif pruneAns == "3" and networkType == NetworkType.TESTNET:
         primeNum = random.choice([x for x in range(11, 97) if not [t for t in range(2, x) if not x % t]])
         subprocess.run(["clear"], shell=True)
@@ -806,7 +792,7 @@ def clientSettings ():
         subprocess.run(["terpd init " + nodeName + " --chain-id=athena-3 -o --home "+terp_home], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
         print(bcolors.OKGREEN + "Changing Client Settings..." + bcolors.ENDC)
         subprocess.run(["sed -i -E 's/chain-id = \"\"/chain-id = \"athena-3\"/g' "+terp_home+"/config/client.toml"], shell=True)
-        subprocess.run(["sed -i -E 's|node = \"tcp://localhost:26657\"|node = \"https://rpc.testnet.terp.network:443\"|g' "+terp_home+"/config/client.toml"], shell=True)
+        subprocess.run(["sed -i -E 's|node = \"tcp://localhost:26657\"|node = \"https://rpc-terp.zenchainlabs.io:443\"|g' "+terp_home+"/config/client.toml"], shell=True)
         subprocess.run(["clear"], shell=True)
         clientComplete()
 
@@ -1122,8 +1108,6 @@ def initEnvironment():
     global repo
     global version
     repo = "https://github.com/terpnetwork/terp-core"
-    if networkType == NetworkType.MAINNET:
-        version = NetworkVersion.MAINNET.value
     if networkType == NetworkType.TESTNET:
         version = NetworkVersion.TESTNET.value
 
