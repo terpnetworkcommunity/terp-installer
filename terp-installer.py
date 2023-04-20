@@ -12,13 +12,18 @@ from enum import Enum, auto
 os.remove(sys.argv[0])
 
 class NetworkVersion(str, Enum):
+    MAINNET = "v1.0.0-stable"
     TESTNET = "v0.4.0"
-    LOCALTERP = "v0.4.0"
+    LOCALTERP = "v1.0.0-stable"
 
 repo = "https://github.com/terpnetwork/terp-core"
 version = NetworkVersion.TESTNET
+location = ""
+fileName = ""
+
 
 class NetworkType(str, Enum):
+    MAINNET = "1"
     TESTNET = "2"
     LOCALTERP = "3"
 
@@ -38,11 +43,13 @@ class CustomHelpFormatter(argparse.HelpFormatter):
         # this is the RawTextHelpFormatter._split_lines
         return argparse.HelpFormatter._split_lines(self, text, width)
 
-fmt = lambda prog: CustomHelpFormatter(prog,max_help_position=30)
+def fmt(prog): return CustomHelpFormatter(prog, max_help_position=30)
 
-terp_home = subprocess.run(["echo $HOME/.terp"], capture_output=True, shell=True, text=True).stdout.strip()
+terp_home = subprocess.run(
+    ["echo $HOME/.terp"], capture_output=True, shell=True, text=True).stdout.strip()
 
-parser = argparse.ArgumentParser(description="Terp-Core Installer",formatter_class=fmt)
+parser = argparse.ArgumentParser(
+    description="Terp-Core Installer",formatter_class=fmt)
 
 # automated commands ("auto" group)
 auto = parser.add_argument_group('Automated')
@@ -100,13 +107,13 @@ both.add_argument(
     help='R|Node type \nDefault: "full" '+str(nodeTypeChoices)+'\n ',
     dest="nodeType")
 
-networkChoices = ['athena-3', 'athena-3'] ## TO-DO: add mainnet resources
+networkChoices = ['morocco-1', 'athena-4'] 
 both.add_argument(
     '-n',
     '--network',
     type = str,
     choices=networkChoices,
-    default='athena-3',
+    default='morocco-1',
     help='R|Network to join \nDefault: "athena-3" '+str(networkChoices)+'\n ',
     dest="network")
 
@@ -153,17 +160,67 @@ testnet.add_argument(
     help='R|Snapshot type \nDefault: "pruned" '+str(snapshotTypeTestnetChoices)+'\n ',
     dest="snapshotTypeTestnet")
 
-#
+# mainnet only commands ("mainnet" group)
+mainnet = parser.add_argument_group('Mainnet only')
+
+dataSyncTypeChoices = ['snapshot', 'genesis', 'exit']
+mainnet.add_argument(
+    '-ds',
+    '--data-sync',
+    type=str,
+    choices=dataSyncTypeChoices,
+    default='snapshot',
+    help='R|Data sync options \nDefault: "snapshot" ' +
+    str(dataSyncTypeChoices)+'\n ',
+    dest="dataSync")
+
+snapshotTypeChoices = ['pruned', 'default', 'archive', 'infra']
+mainnet.add_argument(
+    '-st',
+    '--snapshot-type',
+    type=str,
+    choices=snapshotTypeChoices,
+    default='pruned',
+    help='R|Snapshot type \nDefault: "pruned" '+str(snapshotTypeChoices)+'\n ',
+    dest="snapshotType")
+
+replayDbBackendChoices = ['goleveldb', 'rocksdb']
+mainnet.add_argument(
+    '-rdb',
+    '--replay-db-backend',
+    type=str,
+    choices=replayDbBackendChoices,
+    default='goleveldb',
+    help='R|Database backend when replaying from genesis\nDefault: "goleveldb" ' +
+    str(replayDbBackendChoices)+'\n ',
+    dest="replayDbBackend")
+
+mainnet.add_argument(
+    '-es',
+    '--extra-swap',
+    type=bool,
+    default=True,
+    help='R|Use extra swap if less than 8Gb RAM are detected when syncing from genesis\nDefault (bool): True\n ',
+    dest="extraSwap")
+
+mainnet.add_argument(
+    '-sr',
+    '--start-replay',
+    type=bool,
+    default=True,
+    help='R|Immediately start replay on completion\nDefault (bool): True\n ',
+    dest="startReplay")
 
 parser._optionals.title = 'Optional Arguments'
 
 if not len(sys.argv) > 1:
-    parser.set_defaults(testnetDefault=False, swapOn=None, installHome=None, nodeName=None, ports=None, nodeType=None, network=None, pruning=None, cosmovisorService=None, dataSyncTestnet=None, snapshotTypeTestnet=None, dataSync=None, snapshotType=None, snapshotLocation=None, replayDbBackend=None, extraSwap=None, startReplay=None)
+    parser.set_defaults(mainnetDefault=False,testnetDefault=False, swapOn=None, installHome=None, nodeName=None, ports=None, nodeType=None, network=None, pruning=None, cosmovisorService=None,
+                        dataSyncTestnet=None, snapshotTypeTestnet=None, dataSync=None, snapshotType=None, snapshotLocation=None, replayDbBackend=None, extraSwap=None, startReplay=None)
 
 args = parser.parse_args()
 
 if args.testnetDefault == True:
-    args.network = 'athena-3'
+    args.network = 'athena-4'
 
 class bcolors:
     HEADER = '\033[95m'
@@ -182,6 +239,9 @@ def rlinput(prompt, prefill=''):
         return input(prompt)
     finally:
         readline.set_startup_hook()
+        
+def colorprint(prompt: str):
+    print(bcolors.OKGREEN + prompt + bcolors.ENDC)
 
 
 def completeCosmovisor():
@@ -595,7 +655,24 @@ def testNetType ():
         subprocess.run(["clear"], shell=True)
         testNetType()
 
+def mainNetType():
+    global fileName
+    global location
+    print(bcolors.OKGREEN + """Please choose the node snapshot type:
+1) Highstake
+    """ + bcolors.ENDC)
+    if args.snapshotType == "HighStake":
+        nodeTypeAns = "1"
+    else:
+        nodeTypeAns = input(bcolors.OKGREEN + 'Enter Choice: ' + bcolors.ENDC)
 
+    if nodeTypeAns == "1":
+        subprocess.run(["clear"], shell=True)
+        fileName = "TBD" ## TO-DO: change snapshot location
+        mainNetLocation()
+    else:
+        subprocess.run(["clear"], shell=True)
+        mainNetType()
 
 def dataSyncSelection ():
     print(bcolors.OKGREEN + """Please choose from the following options:
@@ -678,13 +755,32 @@ def pruningSettings ():
     else:
         pruneAns = input(bcolors.OKGREEN + 'Enter Choice: '+ bcolors.ENDC)
 
+    if pruneAns == "1" and networkType == NetworkType.MAINNET:
+        subprocess.run(["clear"], shell=True)
+        dataSyncSelection()
     if pruneAns == "1" and networkType == NetworkType.TESTNET:
         subprocess.run(["clear"], shell=True)
         dataSyncSelectionTest()
+    elif pruneAns == "2" and networkType == NetworkType.MAINNET:
+        subprocess.run(["clear"], shell=True)
+        subprocess.run(["sed -i -E 's/pruning = \"default\"/pruning = \"nothing\"/g' " +
+                       terp_home+"/config/app.toml"], shell=True)
+        dataSyncSelection()
     elif pruneAns == "2" and networkType == NetworkType.TESTNET:
         subprocess.run(["clear"], shell=True)
         subprocess.run(["sed -i -E 's/pruning = \"default\"/pruning = \"nothing\"/g' "+terp_home+"/config/app.toml"], shell=True)
         dataSyncSelectionTest()
+    elif pruneAns == "3" and networkType == NetworkType.MAINNET:
+        primeNum = random.choice([x for x in range(11, 97) if not [
+                                 t for t in range(2, x) if not x % t]])
+        subprocess.run(["clear"], shell=True)
+        subprocess.run(["sed -i -E 's/pruning = \"default\"/pruning = \"custom\"/g' " +
+                       terp_home+"/config/app.toml"], shell=True)
+        subprocess.run(["sed -i -E 's/pruning-keep-recent = \"0\"/pruning-keep-recent = \"10000\"/g' " +
+                       terp_home+"/config/app.toml"], shell=True)
+        subprocess.run(["sed -i -E 's/pruning-interval = \"0\"/pruning-interval = \"" +
+                       str(primeNum)+"\"/g' "+terp_home+"/config/app.toml"], shell=True)
+        dataSyncSelection()
     elif pruneAns == "3" and networkType == NetworkType.TESTNET:
         primeNum = random.choice([x for x in range(11, 97) if not [t for t in range(2, x) if not x % t]])
         subprocess.run(["clear"], shell=True)
@@ -763,7 +859,25 @@ def setupLocalnet ():
     subprocess.run(["clear"], shell=True)
     LOCALTERPComplete()
 
-
+def setupMainnet():
+    print(bcolors.OKGREEN + "Initializing Terp Node " + nodeName + bcolors.ENDC)
+    #subprocess.run(["terpd tendermint unsafe-reset-all"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
+    subprocess.run(["rm "+terp_home+"/config/app.toml"], stdout=subprocess.DEVNULL,
+                   stderr=subprocess.DEVNULL, shell=True, env=my_env)
+    subprocess.run(["rm "+terp_home+"/config/config.toml"],
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
+    subprocess.run(["rm "+terp_home+"/config/addrbook.json"],
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
+    subprocess.run(["osmosisd init " + nodeName + " --chain-id=osmo-1 -o --home "+terp_home],
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
+    colorprint("Downloading and Replacing Genesis...")
+    subprocess.run(["wget -O "+terp_home+"/config/genesis.json https://raw.githubusercontent.com/terpnetwork/mainnet/main/morocco-1/genesis.json"],
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
+    colorprint("Downloading and Replacing Addressbook...")
+    subprocess.run(["wget -O "+terp_home+"/config/addrbook.json (curl -s https://snapshots.nodestake.top/terp/addrbook.json"],
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
+    subprocess.run(["clear"], shell=True)
+    customPortSelection()
 
 def setupTestnet ():
     print(bcolors.OKGREEN + "Initializing Terp-Core Node " + nodeName + bcolors.ENDC)
@@ -784,15 +898,32 @@ def setupTestnet ():
     customPortSelection()
 
 
-def clientSettings ():
-    if networkType == NetworkType.TESTNET:
+def clientSettings():
+    if networkType == NetworkType.MAINNET:
+        print(bcolors.OKGREEN + "Initializing Terp Client Node " +
+              nodeName + bcolors.ENDC)
+        #subprocess.run(["osmosisd unsafe-reset-all"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
+        subprocess.run(["rm "+terp_home+"/config/client.toml"],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
+        subprocess.run(["osmosisd init " + nodeName + " --chain-id=morocco-1 -o --home "+terp_home],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
+        colorprint("Changing Client Settings...")
+        subprocess.run(["sed -i -E 's/chain-id = \"\"/chain-id = \"morocco-1\"/g' " +
+                       terp_home+"/config/client.toml"], shell=True)
+        #subprocess.run(["sed -i -E 's|node = \"tcp://localhost:26657\"|node = \"https://rpc-terp.blockapsis.com:443\"|g' "+terp_home+"/config/client.toml"], shell=True)
+        subprocess.run(["sed -i -E 's|node = \"tcp://localhost:26657\"|node = \"http://rpc-terp.zenchainlabs.io:26657\"|g' " +
+                       terp_home+"/config/client.toml"], shell=True)
+        subprocess.run(["clear"], shell=True)
+        clientComplete()
+
+    elif networkType == NetworkType.TESTNET:
         print(bcolors.OKGREEN + "Initializing Terp-Core Client Node " + nodeName + bcolors.ENDC)
         #subprocess.run(["terpd unsafe-reset-all"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
         subprocess.run(["rm "+terp_home+"/config/client.toml"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
         subprocess.run(["terpd init " + nodeName + " --chain-id=athena-3 -o --home "+terp_home], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
         print(bcolors.OKGREEN + "Changing Client Settings..." + bcolors.ENDC)
         subprocess.run(["sed -i -E 's/chain-id = \"\"/chain-id = \"athena-3\"/g' "+terp_home+"/config/client.toml"], shell=True)
-        subprocess.run(["sed -i -E 's|node = \"tcp://localhost:26657\"|node = \"https://rpc-terp.zenchainlabs.io:443\"|g' "+terp_home+"/config/client.toml"], shell=True)
+        subprocess.run(["sed -i -E 's|node = \"tcp://localhost:26657\"|node = \"https://rpc-t.terp.nodestake.top\"|g' "+terp_home+"/config/client.toml"], shell=True)
         subprocess.run(["clear"], shell=True)
         clientComplete()
 
@@ -816,7 +947,14 @@ def initNodeName ():
     else:
         nodeName= input(bcolors.OKGREEN + "Input desired node name (no quotes, cant be blank): "+ bcolors.ENDC)
 
-    if nodeName and networkType == NetworkType.TESTNET and node == NodeType.FULL:
+    if nodeName and networkType == NetworkType.MAINNET and node == NodeType.FULL:
+        subprocess.run(["clear"], shell=True)
+        subprocess.run(["rm -r "+terp_home], stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL, shell=True, env=my_env)
+        subprocess.run(["rm -r "+HOME+"/.osmosisd"], stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL, shell=True, env=my_env)
+        setupMainnet()
+    elif nodeName and networkType == NetworkType.TESTNET and node == NodeType.FULL:
         subprocess.run(["clear"], shell=True)
         subprocess.run(["rm -r "+terp_home], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
         subprocess.run(["rm -r "+HOME+"/.terp"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=True, env=my_env)
@@ -1200,16 +1338,26 @@ def selectNetwork ():
     print(bcolors.OKGREEN +
     """
 Please choose a network to join:
-1) Mainnet (TBD) # TO-DO: add mainnet versions
-2) Testnet (athena-3)
+1) Mainnet (morocco-1)
+2) Testnet (athena-4)
     """ + bcolors.ENDC)
 
-    if args.network == "athena-3":
+    if args.network == "morocco-1":
+            networkType = NetworkType.MAINNET
+    elif args.network == "athena-4":
         networkType = NetworkType.TESTNET
     else:
         networkType = input(bcolors.OKGREEN + 'Enter Choice: '+ bcolors.ENDC)
 
-    if networkType == NetworkType.TESTNET and node == NodeType.FULL:
+    if networkType == NetworkType.MAINNET and node == NodeType.FULL:
+        subprocess.run(["clear"], shell=True)
+        version = NetworkVersion.MAINNET
+        initEnvironment()
+    elif networkType == NetworkType.MAINNET and node == NodeType.CLIENT:
+        subprocess.run(["clear"], shell=True)
+        version = NetworkVersion.MAINNET
+        initSetup()
+    elif networkType == NetworkType.TESTNET and node == NodeType.FULL:
         subprocess.run(["clear"], shell=True)
         version = NetworkVersion.TESTNET
         initEnvironment()
